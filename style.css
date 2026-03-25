@@ -53,6 +53,7 @@ header {
     height: 80px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
     overflow: hidden;
+    clip-path: inset(0);
 }
 header::after {
     content: '';
