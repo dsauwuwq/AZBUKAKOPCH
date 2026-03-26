@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Азбука копчения – искусство копчения мяса</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="parallax-bg" id="parallax-bg"></div>
+    <header>
+    <div class="logo"><img src="Images/your-logo.svg" alt="Азбука копчения" class="logo-img"></div>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-controls="site-nav" aria-expanded="false">Меню</button>
+    <nav id="site-nav">
+        <a href="#history">История</a>
+        <a href="#pricelist">Виды копчений</a>
+        <a href="#order">Заказ</a>
+        <a href="#" class="cart-icon" id="cart-icon">Корзина<span class="cart-count" id="cart-count">0</span></a>
+    </nav>
+</header>
+
+<div id="cart-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Ваша корзина</h2>
+        <div id="modal-cart-container">
+            <p>Корзина пуста</p>
+        </div>
+        <button id="modal-checkout-btn" class="checkout-btn">Оформить заказ</button>
+    </div>
+</div>
+
+    <div id="fullpage-runner" class="fullpage-runner">
+    <section class="hero parallax">
+        <div class="hero-content">
+            <h1>Вкус, который забыть невозможно</h1>
+            <p>Натуральный дым. Ручная работа. Честное мясо.</p>
+        </div>
+    </section>
+
+    <div class="post-history-bg" id="post-history-bg">
+    <section id="history" class="history">
+        <div class="container">
+            <h2>О копчении</h2>
+            <div class="history-flip-card" id="history-flip-card">
+                <div class="history-flip-inner">
+                    <div class="history-flip-front history-block">
+                        <p>Всё началось с разочарования в магазинном мясе: безвкусные грудинки с жидким дымом, пересол, химические добавки. Я бросил офис, продал машину и построил коптильни, где лично контролирую каждый этап — от выбора фермерского сырья до финальной минуты копчения. Никакого конвейера, только ручной контроль температуры, времени и сорта древесины (ольха, вишня, яблоня).</p>
+                        <span class="history-flip-hint">Нажмите, чтобы узнать больше →</span>
+                    </div>
+                    <div class="history-flip-back history-block">
+                        <p>Сегодня моя коптильня — это принципы, а не просто производство. Я не использую жидкий дым, ускорители и искусственные ингибиторы. Мясо коптится столько, сколько нужно натуральному продукту, а срок годности остаётся естественным — ровно настолько, насколько позволяет качество. Я лично знаю каждого фермера, у которого закупаю сырьё, и делаю продукт, который не стыдно положить на стол. Это вкус, который вы почти забыли: без компромиссов, без лишних ингредиентов, только честный дым и мясо с душой.</p>
+                        <span class="history-flip-hint">← Вернуться</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+        <div id="pricelist" class="pricelist-page">
+            <section class="pricelist">
+                <div class="container">
+                    <h2>Виды копчений</h2>
+                    <div class="products-wrapper">
+                        <button class="scroll-arrow scroll-arrow-left" id="scroll-left">❮</button>
+                        <div class="products" id="products-container">
+                            <p>Загрузка товаров...</p>
+                        </div>
+                        <button class="scroll-arrow scroll-arrow-right" id="scroll-right">❯</button>
+                    </div>
+                    <div class="products-dots" id="products-dots"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+        <div id="order" class="order-page">
+            <section class="order">
+                <div class="container">
+                    <h2>Оформить заказ</h2>
+                    <form id="order-form">
+                        <input type="text" id="name" placeholder="Ваше имя" required>
+                        <input type="tel" id="phone" placeholder="Номер телефона" required>
+                        <button type="submit">Оформить заказ</button>
+                    </form>
+                    <div id="form-status"></div>
+                </div>
+            </section>
+        </div>
+
+
+
+        <footer>
+            <p>&copy; 2026 Азбука копчения. Все права защищены. 🔥</p>
+        </footer>
+    </div>
+    </div><!-- /fullpage-runner -->
+
+    <div class="section-nav" id="section-nav">
+        <button class="section-nav-btn" id="section-nav-up" aria-label="Предыдущий раздел">&#8679;</button>
+        <div class="section-nav-dots" id="section-nav-dots"></div>
+        <button class="section-nav-btn" id="section-nav-down" aria-label="Следующий раздел">&#8681;</button>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        const parallaxBg = document.getElementById('parallax-bg');
+        const historySection = document.getElementById('history');
+        let latestScrollY = window.scrollY;
+        let ticking = false;
+
+        function updateParallax() {
+            parallaxBg.style.transform = `translateY(${latestScrollY * -0.3}px)`;
+
+            const historyBottom = historySection
+                ? historySection.offsetTop + historySection.offsetHeight
+                : 0;
+            const secondBgStartOffset = 700;
+            const secondBgScroll = Math.max(0, latestScrollY - (historyBottom - secondBgStartOffset));
+            document.body.style.setProperty('--bg2-parallax', `${secondBgScroll * -0.1}px`);
+
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', () => {
+            latestScrollY = window.scrollY;
+            if (!ticking) {
+                window.requestAnimationFrame(updateParallax);
+                ticking = true;
+            }
+        });
+
+        updateParallax();
+    </script>
+</body>
+</html>
