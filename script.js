@@ -669,6 +669,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const syncNavPosition = (targetIdx = getCurrentSectionIndex()) => {
         const nav = document.getElementById('section-nav');
         if (!nav) return;
+        if (window.innerWidth <= 768) {
+            nav.classList.remove('corner');
+            nav.style.top = '';
+            return;
+        }
         const useCorner = shouldNavUseCornerForIndex(targetIdx);
         const navRect = getNavTargetRect(nav, useCorner);
         nav.classList.toggle('corner', useCorner);
@@ -685,10 +690,14 @@ document.addEventListener('DOMContentLoaded', () => {
         updateNavButtons();
     };
 
-    if (navUp && navDown) {
+    if (dotsContainer) {
         renderDots();
-        navUp.addEventListener('click', () => scrollToSection(getCurrentSectionIndex() - 1));
-        navDown.addEventListener('click', () => scrollToSection(getCurrentSectionIndex() + 1));
+        if (navUp) {
+            navUp.addEventListener('click', () => scrollToSection(getCurrentSectionIndex() - 1));
+        }
+        if (navDown) {
+            navDown.addEventListener('click', () => scrollToSection(getCurrentSectionIndex() + 1));
+        }
         window.addEventListener('navigateToSection', (e) => scrollToSection(e.detail));
         window.addEventListener('resize', syncNavPosition);
         updateNavButtons();
@@ -715,6 +724,46 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('touchmove', (e) => {
         if (!isInsideScrollable(e.target)) e.preventDefault();
     }, { passive: false });
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchTrackingEnabled = false;
+    const SWIPE_THRESHOLD = 60;
+    const SWIPE_VERTICAL_BIAS = 1.2;
+
+    window.addEventListener('touchstart', (e) => {
+        if (!e.touches.length) return;
+        if (document.body.classList.contains('modal-open')) {
+            touchTrackingEnabled = false;
+            return;
+        }
+
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchTrackingEnabled = !isInsideScrollable(e.target);
+    }, { passive: true });
+
+    window.addEventListener('touchend', (e) => {
+        if (!touchTrackingEnabled || !e.changedTouches.length) return;
+
+        const touch = e.changedTouches[0];
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+        const absDeltaX = Math.abs(deltaX);
+        const absDeltaY = Math.abs(deltaY);
+
+        touchTrackingEnabled = false;
+
+        if (absDeltaY < SWIPE_THRESHOLD) return;
+        if (absDeltaY < absDeltaX * SWIPE_VERTICAL_BIAS) return;
+
+        if (deltaY < 0) {
+            scrollToSection(getCurrentSectionIndex() + 1);
+        } else {
+            scrollToSection(getCurrentSectionIndex() - 1);
+        }
+    }, { passive: true });
 
     const SCROLL_KEYS = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
     window.addEventListener('keydown', (e) => {
