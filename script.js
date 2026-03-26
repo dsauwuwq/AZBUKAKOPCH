@@ -1,6 +1,7 @@
 const API_URL = 'https://script.google.com/macros/s/AKfycbyjcz6MiW9jy-yYLrLZMCoszkdgKQlDQAwmbh5wlwEh51dv5K15ddRVPeJ1cBGLB2Og-A/exec'; // замените на ваш
 
 let cart = [];
+let _fpIndex = 0;
 
 // Элементы корзины и модалки
 const cartIcon = document.getElementById('cart-icon');
@@ -86,31 +87,36 @@ function addToCart(product, quantity) {
     updateModalCart();
 }
 
+let _scrollY = 0;
+
 // Открыть модальное окно
 function openCartModal() {
-    cartModal.style.display = 'block';
+    _scrollY = window.scrollY;
+    document.body.style.top = `-${_scrollY}px`;
+    cartModal.style.display = 'flex';
+    document.body.classList.add('modal-open');
     updateModalCart(); // обновляем на всякий случай
 }
 
 // Закрыть модальное окно
 function closeCartModal() {
     cartModal.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    window.scrollTo(0, _scrollY);
 }
 
 // Обработчики модалки
 cartIcon.addEventListener('click', (e) => { e.preventDefault(); openCartModal(); });
 closeModalBtn.addEventListener('click', closeCartModal);
-window.addEventListener('click', (e) => {
+cartModal.addEventListener('click', (e) => {
     if (e.target === cartModal) closeCartModal();
 });
 
 // Кнопка "Оформить заказ" в модалке прокручивает к форме
 modalCheckoutBtn.addEventListener('click', () => {
     closeCartModal();
-    const orderSection = document.getElementById('order');
-    if (orderSection) {
-        orderSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 3 }));
 });
 
 // Загрузка товаров (без изменений)
@@ -140,6 +146,9 @@ function renderProducts(products) {
 
     if (products.length === 0) {
         container.innerHTML = '<p>Товары временно отсутствуют</p>';
+        container.dispatchEvent(new CustomEvent('productsRendered', {
+            detail: { hasProducts: false }
+        }));
         return;
     }
 
@@ -222,6 +231,10 @@ function renderProducts(products) {
             }
         });
     });
+
+    container.dispatchEvent(new CustomEvent('productsRendered', {
+        detail: { hasProducts: true }
+    }));
 }
 
 // Отправка заказа (с использованием текущей корзины)
@@ -283,9 +296,59 @@ if (orderForm) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadProducts();
     updateCartCounter();
     updateModalCart();
+
+    const headerElement = document.querySelector('header');
+    const headerNav = document.querySelector('header nav');
+    const navToggle = document.getElementById('nav-toggle');
+    const navAllLinks = headerNav ? Array.from(headerNav.querySelectorAll('a')) : [];
+
+    if (headerElement && headerNav && navToggle && navAllLinks.length) {
+        const closeCollapsedMenu = () => {
+            headerNav.classList.remove('open');
+            navToggle.setAttribute('aria-expanded', 'false');
+        };
+
+        const hasWrappedNavItems = () => {
+            if (navAllLinks.length < 2) return false;
+            const firstTop = navAllLinks[0].offsetTop;
+            return navAllLinks.some((link) => Math.abs(link.offsetTop - firstTop) > 2);
+        };
+
+        const updateHeaderNavMode = () => {
+            // Сначала возвращаем стандартный режим, чтобы корректно измерить перенос.
+            headerElement.classList.remove('nav-collapsed');
+            closeCollapsedMenu();
+
+            if (hasWrappedNavItems()) {
+                headerElement.classList.add('nav-collapsed');
+            }
+        };
+
+        navToggle.addEventListener('click', () => {
+            if (!headerElement.classList.contains('nav-collapsed')) return;
+            const isOpen = headerNav.classList.toggle('open');
+            navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        navAllLinks.forEach((link) => {
+            link.addEventListener('click', () => {
+                if (headerElement.classList.contains('nav-collapsed')) {
+                    closeCollapsedMenu();
+                }
+            });
+        });
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            window.clearTimeout(resizeTimer);
+            resizeTimer = window.setTimeout(updateHeaderNavMode, 90);
+        });
+
+        updateHeaderNavMode();
+        window.setTimeout(updateHeaderNavMode, 120);
+    }
 
     // Переворот карточки "О копчении"
     const flipCard = document.getElementById('history-flip-card');
@@ -297,25 +360,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Плавная прокрутка к секциям по клику в меню с учетом высоты шапки
     const headerNavLinks = document.querySelectorAll('header nav a[href^="#"]');
-    const headerElement = document.querySelector('header');
 
     headerNavLinks.forEach((link) => {
         link.addEventListener('click', (event) => {
             const targetSelector = link.getAttribute('href');
-            if (!targetSelector) return;
-
-            const targetElement = document.querySelector(targetSelector);
-            if (!targetElement) return;
-
+            if (!targetSelector || targetSelector === '#') return;
             event.preventDefault();
-
-            const headerHeight = headerElement ? headerElement.offsetHeight : 0;
-            const targetTop = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight - 12;
-
-            window.scrollTo({
-                top: Math.max(0, targetTop),
-                behavior: 'smooth'
-            });
+            const idxMap = { '#history': 1, '#pricelist': 2, '#order': 3 };
+            const idx = idxMap[targetSelector];
+            if (idx !== undefined) scrollToSection(idx);
         });
     });
     
@@ -323,77 +376,171 @@ document.addEventListener('DOMContentLoaded', () => {
     const scrollLeftBtn = document.getElementById('scroll-left');
     const scrollRightBtn = document.getElementById('scroll-right');
     const productsContainer = document.getElementById('products-container');
+    const productsDots = document.getElementById('products-dots');
     
     if (scrollLeftBtn && scrollRightBtn && productsContainer) {
         let currentIndex = 0;
         let cards = [];
         let isAnimating = false;
-        let prevIndex = 0;
+        const CAROUSEL_ANIMATION_MS = 800;
+
+        const setCarouselCooldown = (locked) => {
+            isAnimating = locked;
+            scrollLeftBtn.disabled = locked;
+            scrollRightBtn.disabled = locked;
+            productsContainer.classList.toggle('is-animating', locked);
+
+            if (productsDots) {
+                Array.from(productsDots.children).forEach((dot) => {
+                    dot.disabled = locked;
+                });
+            }
+        };
         
-        // Функция обновления карточек
-        function updateCarousel(direction = 'right') {
-            if (isAnimating) return;
-            isAnimating = true;
-            
+        const clearCarouselClasses = (card) => {
+            card.classList.remove(
+                'active', 'prev', 'prev-1', 'prev-2', 'exiting', 'entering-right', 'entering-left',
+                'compact-exiting', 'compact-enter-from-right', 'compact-enter-from-left',
+                'compact-exit-to-left', 'compact-exit-to-right'
+            );
+        };
+
+        const syncProductDots = () => {
+            if (!productsDots) return;
+
+            if (productsDots.children.length !== cards.length) {
+                productsDots.innerHTML = '';
+                cards.forEach((_, idx) => {
+                    const dot = document.createElement('button');
+                    dot.className = 'products-dot';
+                    dot.type = 'button';
+                    dot.setAttribute('aria-label', `Перейти к карточке ${idx + 1}`);
+                    dot.addEventListener('click', () => {
+                        if (isAnimating || idx === currentIndex) return;
+                        const direction = idx > currentIndex ? 'right' : 'left';
+                        currentIndex = idx;
+                        updateCarousel(direction);
+                    });
+                    productsDots.appendChild(dot);
+                });
+            }
+
+            Array.from(productsDots.children).forEach((dot, idx) => {
+                dot.classList.toggle('active', idx === currentIndex);
+            });
+        };
+
+        const shouldUseCompactCarousel = () => {
+            const currentCards = Array.from(productsContainer.querySelectorAll('.product-card'));
+            if (currentCards.length < 3) return true;
+            if (window.innerWidth <= 480) return true;
+            const sampleCard = currentCards[0];
+            if (!sampleCard) return false;
+
+            const cardWidth = sampleCard.getBoundingClientRect().width;
+            const containerWidth = productsContainer.getBoundingClientRect().width;
+            const sideOffset = window.innerWidth <= 768 ? 240 : 350;
+            const previewScale = 0.75;
+            const requiredWidth = (sideOffset * 2) + (cardWidth * previewScale) + 24;
+
+            return containerWidth < requiredWidth;
+        };
+
+        const applyCarouselState = (direction = 'right', animate = true) => {
             cards = Array.from(productsContainer.querySelectorAll('.product-card'));
-            
-            if (cards.length === 0) {
-                isAnimating = false;
+
+            if (cards.length === 0) return;
+
+            currentIndex = (currentIndex + cards.length) % cards.length;
+            const previousIndex = cards.findIndex((c) => c.classList.contains('active'));
+            const compactMode = shouldUseCompactCarousel();
+            productsContainer.classList.toggle('compact-mode', compactMode);
+
+            cards.forEach(clearCarouselClasses);
+
+            if (compactMode) {
+                const safePreviousIndex = previousIndex >= 0 ? previousIndex : currentIndex;
+
+                if (animate && safePreviousIndex !== currentIndex) {
+                    const exitingCard = cards[safePreviousIndex];
+                    if (exitingCard) {
+                        exitingCard.classList.add(
+                            'compact-exiting',
+                            direction === 'right' ? 'compact-exit-to-left' : 'compact-exit-to-right'
+                        );
+                    }
+                }
+
+                const activeCard = cards[currentIndex];
+                if (activeCard) {
+                    activeCard.classList.add('active');
+                    if (animate && safePreviousIndex !== currentIndex) {
+                        activeCard.classList.add(
+                            direction === 'right' ? 'compact-enter-from-right' : 'compact-enter-from-left'
+                        );
+                    }
+                }
+
+                syncProductDots();
+
                 return;
             }
-            
-            // Сохраняем индекс активной карточки до обновления
-            const activeCardIndex = cards.findIndex(c => c.classList.contains('active'));
-            
-            // Нормализуем индекс
-            currentIndex = (currentIndex + cards.length) % cards.length;
-            
-            // Определяем карточку, которая уходит с края
+
+            const activeCardIndex = previousIndex >= 0 ? previousIndex : currentIndex;
             let exitingCardIndex;
+
             if (direction === 'right') {
-                // При свапе вправо левая карточка уходит
                 exitingCardIndex = (activeCardIndex - 1 + cards.length) % cards.length;
             } else {
-                // При свапе влево правая карточка уходит
                 exitingCardIndex = (activeCardIndex + 1) % cards.length;
             }
-            
-            // Обновляем классы всех карточек
+
             cards.forEach((card, idx) => {
-                card.classList.remove('active', 'prev', 'prev-1', 'prev-2', 'exiting', 'entering-right', 'entering-left');
-                
                 if (idx === currentIndex) {
-                    // Это новая активная карточка
                     card.classList.add('active');
-                    if (direction === 'right') {
-                        card.classList.add('entering-right');
-                    } else {
-                        card.classList.add('entering-left');
+                    if (animate && activeCardIndex !== currentIndex) {
+                        card.classList.add(direction === 'right' ? 'entering-right' : 'entering-left');
                     }
                 } else {
                     card.classList.add('prev');
-                    
-                    // Вычисляем расстояние от новой активной карточки
-                    let positionInStack = (idx - currentIndex + cards.length) % cards.length;
-                    
+                    const positionInStack = (idx - currentIndex + cards.length) % cards.length;
+                    const staysVisibleAsNeighbor =
+                        positionInStack === 1 || positionInStack === cards.length - 1;
+
                     if (positionInStack === 1) {
-                        // Правая карточка
                         card.classList.add('prev-2');
                     } else if (positionInStack === cards.length - 1) {
-                        // Левая карточка
                         card.classList.add('prev-1');
                     }
-                    
-                    // Добавляем класс exiting только для карточки, которая уходит с края
-                    if (idx === exitingCardIndex) {
+
+                    if (animate && idx === exitingCardIndex && !staysVisibleAsNeighbor) {
                         card.classList.add('exiting');
                     }
                 }
             });
-            
-            setTimeout(() => {
-                isAnimating = false;
-            }, 800);
+
+            syncProductDots();
+        };
+        
+        // Функция обновления карточек
+        function updateCarousel(direction = 'right', animate = true) {
+            if (isAnimating) return;
+            setCarouselCooldown(animate);
+
+            cards = Array.from(productsContainer.querySelectorAll('.product-card'));
+
+            if (cards.length === 0) {
+                setCarouselCooldown(false);
+                return;
+            }
+
+            applyCarouselState(direction, animate);
+
+            if (animate) {
+                setTimeout(() => {
+                    setCarouselCooldown(false);
+                }, CAROUSEL_ANIMATION_MS);
+            }
         }
         
         scrollLeftBtn.addEventListener('click', () => {
@@ -405,10 +552,174 @@ document.addEventListener('DOMContentLoaded', () => {
             currentIndex++;
             updateCarousel('right');
         });
-        
-        // Инициализация карусели при загрузке товаров
-        setTimeout(() => {
-            updateCarousel('right');
-        }, 500);
+
+        window.addEventListener('resize', () => {
+            updateCarousel('right', false);
+        });
+
+        productsContainer.addEventListener('productsRendered', (event) => {
+            const hasProducts = event.detail?.hasProducts;
+
+            if (!hasProducts) {
+                if (productsDots) {
+                    productsDots.innerHTML = '';
+                }
+                return;
+            }
+
+            currentIndex = 0;
+            updateCarousel('right', false);
+        });
     }
+
+    loadProducts();
+
+    // Навигация по секциям стрелками
+    const sectionIds = ['hero', 'history', 'pricelist', 'order'];
+    const navUp = document.getElementById('section-nav-up');
+    const navDown = document.getElementById('section-nav-down');
+
+    const getSections = () => sectionIds
+        .map(id => document.querySelector(id === 'hero' ? '.hero' : `#${id}`))
+        .filter(Boolean);
+
+    const getCurrentSectionIndex = () => _fpIndex;
+
+    const dotsContainer = document.getElementById('section-nav-dots');
+
+    const renderDots = () => {
+        if (!dotsContainer) return;
+        const sections = getSections();
+        dotsContainer.innerHTML = '';
+        sections.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.className = 'section-nav-dot';
+            dot.setAttribute('aria-label', `Перейти к разделу ${i + 1}`);
+            dot.addEventListener('click', () => scrollToSection(i));
+            dotsContainer.appendChild(dot);
+        });
+    };
+
+    const updateNavButtons = () => {
+        const sections = getSections();
+        const idx = getCurrentSectionIndex();
+        if (navUp) navUp.disabled = idx === 0;
+        if (navDown) navDown.disabled = idx >= sections.length - 1;
+        if (dotsContainer) {
+            dotsContainer.querySelectorAll('.section-nav-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === idx);
+            });
+        }
+    };
+
+    const getNavTargetRect = (nav, useCorner) => {
+        const width = nav.offsetWidth;
+        const height = nav.offsetHeight;
+
+        if (useCorner) {
+            const top = window.innerHeight - 20 - height;
+            return {
+                left: window.innerWidth - width - 8,
+                right: window.innerWidth - 8,
+                top,
+                bottom: window.innerHeight - 20
+            };
+        }
+
+        const top = (window.innerHeight - height) / 2;
+        return {
+            left: window.innerWidth - width - 8,
+            right: window.innerWidth - 8,
+            top,
+            bottom: top + height
+        };
+    };
+
+    const rectsOverlap = (a, b, pad = 4) => (
+        a.left < b.right + pad &&
+        a.right > b.left - pad &&
+        a.top < b.bottom + pad &&
+        a.bottom > b.top - pad
+    );
+
+    const shouldNavUseCornerForIndex = (idx) => {
+        const nav = document.getElementById('section-nav');
+        const sections = getSections();
+        const targetSection = sections[idx];
+        if (!nav || !targetSection) return false;
+
+        const targetSectionTop = targetSection.getBoundingClientRect().top;
+        const shiftedRects = Array.from(document.querySelectorAll('.hero-content, .history .container, .pricelist, .order'))
+            .map((el) => {
+                const rect = el.getBoundingClientRect();
+                const shiftedTop = rect.top - targetSectionTop;
+                return {
+                    left: rect.left,
+                    right: rect.right,
+                    top: shiftedTop,
+                    bottom: shiftedTop + rect.height
+                };
+            })
+            .filter((rect) => rect.bottom > 0 && rect.top < window.innerHeight);
+
+        const centeredNavRect = getNavTargetRect(nav, false);
+        return shiftedRects.some((rect) => rectsOverlap(centeredNavRect, rect));
+    };
+
+    const syncNavPosition = (targetIdx = getCurrentSectionIndex()) => {
+        const nav = document.getElementById('section-nav');
+        if (!nav) return;
+        const useCorner = shouldNavUseCornerForIndex(targetIdx);
+        const navRect = getNavTargetRect(nav, useCorner);
+        nav.classList.toggle('corner', useCorner);
+        nav.style.top = `${Math.max(0, navRect.top)}px`;
+    };
+
+    const scrollToSection = (idx) => {
+        const sections = getSections();
+        if (idx < 0 || idx >= sections.length) return;
+        syncNavPosition(idx);
+        const fpRunner = document.getElementById('fullpage-runner');
+        if (fpRunner) fpRunner.style.transform = `translateY(calc(-${idx} * 100vh))`;
+        _fpIndex = idx;
+        updateNavButtons();
+    };
+
+    if (navUp && navDown) {
+        renderDots();
+        navUp.addEventListener('click', () => scrollToSection(getCurrentSectionIndex() - 1));
+        navDown.addEventListener('click', () => scrollToSection(getCurrentSectionIndex() + 1));
+        window.addEventListener('navigateToSection', (e) => scrollToSection(e.detail));
+        window.addEventListener('resize', syncNavPosition);
+        updateNavButtons();
+        syncNavPosition();
+    }
+
+    // Отключить скролл мышью/тачем — только вне скроллируемых контейнеров
+    const isInsideScrollable = (el) => {
+        while (el && el !== document.documentElement) {
+            const style = window.getComputedStyle(el);
+            const oy = style.overflowY;
+            if ((oy === 'scroll' || oy === 'auto') && el.scrollHeight > el.clientHeight) {
+                return true;
+            }
+            el = el.parentElement;
+        }
+        return false;
+    };
+
+    window.addEventListener('wheel', (e) => {
+        if (!isInsideScrollable(e.target)) e.preventDefault();
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+        if (!isInsideScrollable(e.target)) e.preventDefault();
+    }, { passive: false });
+
+    const SCROLL_KEYS = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
+    window.addEventListener('keydown', (e) => {
+        if (SCROLL_KEYS.includes(e.key) && !isInsideScrollable(document.activeElement)) {
+            e.preventDefault();
+        }
+    });
 });
