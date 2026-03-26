@@ -158,25 +158,36 @@ function renderProducts(products) {
         const name = product.name || 'Без названия';
         const price = product.price_per_500g ? Number(product.price_per_500g).toLocaleString() + ' ₽' : 'Цена не указана';
         const priceValue = product.price_per_500g || 0;
-        const desc = product.description || '';
+        const desc = product.description || 'Описание скоро появится';
         const img = product.image || 'images/placeholder.jpg';
 
         html += `
             <div class="product-card" data-id="${id}" data-price="${priceValue}">
-                <img src="${img}" alt="${name}" onerror="this.src='images/placeholder.jpg'">
-                <div class="product-info">
-                    <div class="product-title">${name}</div>
-                    <div class="product-desc">${desc}</div>
-                    <div class="cart-controls">
-                        <div class="cart-controls-price">${price} <span class="cart-controls-price-unit">за 500 г</span></div>
-                        <div class="cart-controls-row">
-                            <div class="qty-stepper">
-                                <button class="qty-btn qty-minus">−</button>
-                                <span class="qty-display">1</span>
-                                <button class="qty-btn qty-plus">+</button>
+                <div class="product-card-inner">
+                    <div class="product-face product-face-front">
+                        <img src="${img}" alt="${name}" onerror="this.src='images/placeholder.jpg'">
+                        <div class="product-info">
+                            <div class="product-title">${name}</div>
+                            <div class="product-desc">${desc}</div>
+                            <div class="cart-controls">
+                                <div class="cart-controls-price">${price} <span class="cart-controls-price-unit">за 500 г</span></div>
+                                <div class="cart-controls-row">
+                                    <div class="qty-stepper">
+                                        <button class="qty-btn qty-minus">−</button>
+                                        <span class="qty-display">1</span>
+                                        <button class="qty-btn qty-plus">+</button>
+                                    </div>
+                                    <button class="add-to-cart">В корзину</button>
+                                    <span class="card-cart-count" style="display:none">0 в корзине</span>
+                                </div>
+                                <div class="product-flip-hint">Нажмите на карточку, чтобы открыть описание</div>
                             </div>
-                            <button class="add-to-cart">В корзину</button>
-                            <span class="card-cart-count" style="display:none">0 в корзине</span>
+                        </div>
+                    </div>
+                    <div class="product-face product-face-back">
+                        <div class="product-back-content">
+                            <div class="product-desc product-desc-back">${desc}</div>
+                            <div class="product-flip-hint product-flip-hint-back">Нажмите ещё раз, чтобы вернуться</div>
                         </div>
                     </div>
                 </div>
@@ -210,6 +221,12 @@ function renderProducts(products) {
         plusBtn.addEventListener('click', () => {
             let val = parseInt(qtyDisplay.textContent) || 1;
             qtyDisplay.textContent = val + 1;
+        });
+
+        card.addEventListener('click', (event) => {
+            if (window.innerWidth > 480) return;
+            if (event.target.closest('.qty-stepper, .qty-btn, .add-to-cart, .cart-controls')) return;
+            card.classList.toggle('is-flipped');
         });
     });
 
@@ -353,9 +370,90 @@ document.addEventListener('DOMContentLoaded', () => {
     // Переворот карточки "О копчении"
     const flipCard = document.getElementById('history-flip-card');
     if (flipCard) {
+        const flipInner = flipCard.querySelector('.history-flip-inner');
+        const flipFront = flipCard.querySelector('.history-flip-front');
+        const flipBack = flipCard.querySelector('.history-flip-back');
+        let isFlipAnimating = false;
+
+        const syncHistoryFlipHeight = () => {
+            if (!flipInner || !flipFront || !flipBack) return;
+
+            const previousCardHeight = flipCard.style.height;
+            const previousInnerHeight = flipInner.style.height;
+
+            flipCard.style.height = '';
+            flipInner.style.height = '';
+
+            const frontHeight = flipFront.scrollHeight;
+            const backHeight = flipBack.scrollHeight;
+            const maxHeight = Math.max(frontHeight, backHeight);
+
+            if (maxHeight > 0) {
+                flipCard.style.height = `${maxHeight}px`;
+                flipInner.style.height = `${maxHeight}px`;
+            } else {
+                flipCard.style.height = previousCardHeight;
+                flipInner.style.height = previousInnerHeight;
+            }
+        };
+
+        const animateHistoryFlip = (showBack) => {
+            if (!flipInner) return;
+
+            const fromTransform = showBack
+                ? 'translateZ(0) rotateY(0deg)'
+                : 'translateZ(0) rotateY(180deg)';
+            const toTransform = showBack
+                ? 'translateZ(0) rotateY(180deg)'
+                : 'translateZ(0) rotateY(0deg)';
+
+            if (typeof flipInner.animate === 'function') {
+                const animation = flipInner.animate(
+                    [
+                        { transform: fromTransform },
+                        { transform: toTransform }
+                    ],
+                    {
+                        duration: 700,
+                        easing: 'cubic-bezier(0.4, 0.2, 0.2, 1)',
+                        fill: 'forwards'
+                    }
+                );
+
+                animation.onfinish = () => {
+                    flipCard.classList.toggle('flipped', showBack);
+                    flipInner.style.transform = toTransform;
+                    isFlipAnimating = false;
+                };
+
+                animation.oncancel = () => {
+                    isFlipAnimating = false;
+                };
+
+                return;
+            }
+
+            flipCard.classList.toggle('flipped', showBack);
+            flipInner.style.transform = toTransform;
+            window.setTimeout(() => {
+                isFlipAnimating = false;
+            }, 700);
+        };
+
+        const scheduleHistoryFlipSync = () => {
+            syncHistoryFlipHeight();
+            window.requestAnimationFrame(syncHistoryFlipHeight);
+        };
+
         flipCard.addEventListener('click', () => {
-            flipCard.classList.toggle('flipped');
+            if (isFlipAnimating) return;
+            isFlipAnimating = true;
+            const showBack = !flipCard.classList.contains('flipped');
+            animateHistoryFlip(showBack);
         });
+
+        window.addEventListener('resize', scheduleHistoryFlipSync);
+        scheduleHistoryFlipSync();
     }
 
     // Плавная прокрутка к секциям по клику в меню с учетом высоты шапки
@@ -400,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const clearCarouselClasses = (card) => {
             card.classList.remove(
                 'active', 'prev', 'prev-1', 'prev-2', 'exiting', 'entering-right', 'entering-left',
-                'compact-exiting', 'compact-enter-from-right', 'compact-enter-from-left',
+                'compact-exiting', 'compact-enter-from-right', 'compact-enter-from-left', 'is-flipped',
                 'compact-exit-to-left', 'compact-exit-to-right'
             );
         };
@@ -528,6 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setCarouselCooldown(animate);
 
             cards = Array.from(productsContainer.querySelectorAll('.product-card'));
+            cards.forEach((card) => card.classList.remove('is-flipped'));
 
             if (cards.length === 0) {
                 setCarouselCooldown(false);
@@ -586,6 +685,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const getCurrentSectionIndex = () => _fpIndex;
 
     const dotsContainer = document.getElementById('section-nav-dots');
+    const sectionNav = document.getElementById('section-nav');
+    let navIdleTimer;
+    const NAV_IDLE_MS = 1800;
+
+    const scheduleNavIdle = () => {
+        if (!sectionNav) return;
+        window.clearTimeout(navIdleTimer);
+        navIdleTimer = window.setTimeout(() => {
+            sectionNav.classList.add('is-idle');
+        }, NAV_IDLE_MS);
+    };
+
+    const bumpNavActivity = () => {
+        if (!sectionNav) return;
+        sectionNav.classList.remove('is-idle');
+        scheduleNavIdle();
+    };
 
     const renderDots = () => {
         if (!dotsContainer) return;
@@ -683,6 +799,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scrollToSection = (idx) => {
         const sections = getSections();
         if (idx < 0 || idx >= sections.length) return;
+        bumpNavActivity();
         syncNavPosition(idx);
         const fpRunner = document.getElementById('fullpage-runner');
         if (fpRunner) fpRunner.style.transform = `translateY(calc(-${idx} * 100vh))`;
@@ -702,6 +819,18 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('resize', syncNavPosition);
         updateNavButtons();
         syncNavPosition();
+    }
+
+    if (sectionNav) {
+        ['pointermove', 'pointerdown', 'touchstart', 'focusin', 'mouseenter'].forEach((eventName) => {
+            sectionNav.addEventListener(eventName, bumpNavActivity, { passive: true });
+        });
+
+        ['mousemove', 'touchstart', 'keydown'].forEach((eventName) => {
+            window.addEventListener(eventName, bumpNavActivity, { passive: true });
+        });
+
+        scheduleNavIdle();
     }
 
     // Отключить скролл мышью/тачем — только вне скроллируемых контейнеров
