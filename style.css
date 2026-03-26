@@ -1306,22 +1306,15 @@ footer {
         padding: 0 12px 0 0;
     }
     .section-nav {
-        right: -6px;
-        gap: 6px;
-        padding: 8px 10px 8px 7px;
-        border-radius: 14px 0 0 14px;
+        bottom: 14px;
+        padding: 8px 12px;
     }
     .section-nav.corner {
-        right: -6px;
-    }
-    .section-nav-btn {
-        width: 32px;
-        height: 32px;
-        font-size: 18px;
+        left: 50%;
     }
     .section-nav-dots {
         gap: 7px;
-        padding: 2px 0;
+        padding: 0;
     }
     .section-nav-dot {
         width: 6px;
@@ -1643,86 +1636,52 @@ body.modal-open {
 /* Навигация по секциям */
 .section-nav {
     position: fixed;
-    top: 0;
-    right: -8px;
-    transform: none;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 8px;
-    padding: 12px 14px 12px 10px;
-    background: #000000;
-    border: 1px solid rgba(212, 175, 55, 0.75);
-    border-radius: 18px 0 0 18px;
-    box-shadow: 0 0 0 1px rgba(20, 20, 20, 0.55), 0 0 14px rgba(212, 175, 55, 0.12);
+    justify-content: center;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.72);
+    border: 1px solid rgba(212, 175, 55, 0.38);
+    border-radius: 999px;
+    box-shadow: 0 0 0 1px rgba(20, 20, 20, 0.38), 0 0 14px rgba(0, 0, 0, 0.24);
+    backdrop-filter: blur(8px);
     z-index: 200;
     transition:
-        left 1s cubic-bezier(0.35, 0.05, 0.25, 1),
-        right 1s cubic-bezier(0.35, 0.05, 0.25, 1),
-        top 1s cubic-bezier(0.35, 0.05, 0.25, 1),
-        bottom 1s cubic-bezier(0.35, 0.05, 0.25, 1),
-        transform 1s cubic-bezier(0.35, 0.05, 0.25, 1),
+        transform 0.25s ease,
         box-shadow 0.32s ease,
         border-color 0.32s ease;
 }
 
+.section-nav-btn {
+    display: none;
+}
+
 .section-nav:hover {
-    transform: scale(1.03);
+    transform: translateX(-50%) scale(1.03);
     border-color: #D4AF37;
-    box-shadow: 0 0 0 1px rgba(20, 20, 20, 0.55), 0 0 22px rgba(212, 175, 55, 0.32);
+    box-shadow: 0 0 0 1px rgba(20, 20, 20, 0.42), 0 0 20px rgba(212, 175, 55, 0.18);
 }
 
 .section-nav.corner {
-    right: -8px;
-    transform: none;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .section-nav.corner:hover {
-    transform: scale(1.03);
-}
-
-.section-nav-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.75);
-    border: 1px solid rgba(212, 175, 55, 0.85);
-    color: #D4AF37;
-    font-size: 22px;
-    line-height: 1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s, color 0.2s, opacity 0.2s, transform 0.15s;
-    padding: 0;
-    backdrop-filter: blur(4px);
-    opacity: 0.7;
-}
-
-.section-nav-btn:hover {
-    background: rgba(212, 175, 55, 0.18);
-    color: #FFD86B;
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-.section-nav-btn:active {
-    transform: scale(0.95);
-}
-
-.section-nav-btn:disabled {
-    opacity: 0.2;
-    cursor: default;
-    transform: none;
+    transform: translateX(-50%) scale(1.03);
 }
 
 .section-nav-dots {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 9px;
-    padding: 4px 0;
+    justify-content: center;
+    gap: 12px;
+    padding: 0;
 }
 
 .section-nav-dot {
@@ -1750,6 +1709,90 @@ body.modal-open {
     background: #FFD86B;
     border-color: #FFE8A3;
     transform: scale(1.35);
+}
+
+@media (min-width: 769px) {
+    .section-nav {
+        top: 0;
+        left: auto;
+        right: -8px;
+        bottom: auto;
+        transform: none;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 14px 12px 10px;
+        background: #000000;
+        border: 1px solid rgba(212, 175, 55, 0.75);
+        border-radius: 18px 0 0 18px;
+        box-shadow: 0 0 0 1px rgba(20, 20, 20, 0.55), 0 0 14px rgba(212, 175, 55, 0.12);
+        backdrop-filter: none;
+        transition:
+            left 1s cubic-bezier(0.35, 0.05, 0.25, 1),
+            right 1s cubic-bezier(0.35, 0.05, 0.25, 1),
+            top 1s cubic-bezier(0.35, 0.05, 0.25, 1),
+            bottom 1s cubic-bezier(0.35, 0.05, 0.25, 1),
+            transform 1s cubic-bezier(0.35, 0.05, 0.25, 1),
+            box-shadow 0.32s ease,
+            border-color 0.32s ease;
+    }
+
+    .section-nav:hover {
+        transform: scale(1.03);
+        border-color: #D4AF37;
+        box-shadow: 0 0 0 1px rgba(20, 20, 20, 0.55), 0 0 22px rgba(212, 175, 55, 0.32);
+    }
+
+    .section-nav.corner {
+        left: auto;
+        right: -8px;
+        transform: none;
+    }
+
+    .section-nav.corner:hover {
+        transform: scale(1.03);
+    }
+
+    .section-nav-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.75);
+        border: 1px solid rgba(212, 175, 55, 0.85);
+        color: #D4AF37;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, color 0.2s, opacity 0.2s, transform 0.15s;
+        padding: 0;
+        backdrop-filter: blur(4px);
+        opacity: 0.7;
+    }
+
+    .section-nav-btn:hover {
+        background: rgba(212, 175, 55, 0.18);
+        color: #FFD86B;
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .section-nav-btn:active {
+        transform: scale(0.95);
+    }
+
+    .section-nav-btn:disabled {
+        opacity: 0.2;
+        cursor: default;
+        transform: none;
+    }
+
+    .section-nav-dots {
+        flex-direction: column;
+        gap: 9px;
+        padding: 4px 0;
+    }
 }
 
 /* Модальное окно */
