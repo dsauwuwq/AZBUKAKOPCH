@@ -30,7 +30,7 @@ body {
     left: 0;
     width: 100vw;
     height: 250vh;
-    background-image: url('Images/hero-bg.png');
+    background-image: url('Images/hero-bg.webp');
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -414,6 +414,9 @@ h2::after {
 }
 .history-flip-card {
     perspective: 1200px;
+    -webkit-perspective: 1200px;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
     width: 100%;
     margin-top: 10px;
     cursor: pointer;
@@ -426,23 +429,35 @@ h2::after {
 .history-flip-inner {
     position: relative;
     width: 100%;
+    height: auto;
     transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
     transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    transform: translateZ(0) rotateY(0deg);
+    will-change: transform;
 }
 .history-flip-card.flipped .history-flip-inner {
-    transform: rotateY(180deg);
+    transform: translateZ(0) rotateY(180deg);
 }
 .history-flip-front,
 .history-flip-back {
+    width: 100%;
+    height: auto;
+    min-height: 100%;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+}
+.history-flip-front {
+    transform: rotateY(0deg) translateZ(1px);
 }
 .history-flip-back {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    transform: rotateY(180deg);
+    transform: rotateY(180deg) translateZ(1px);
 }
 .history-flip-hint {
     display: block;
@@ -454,10 +469,13 @@ h2::after {
 }
 .history-block {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(212, 175, 55, 0.35);
     border-radius: 18px;
     padding: 32px 28px 28px;
+    overflow: hidden;
 }
 .history-block-icon {
     font-size: 32px;
@@ -469,9 +487,38 @@ h2::after {
     margin-bottom: 20px;
 }
 
+.history-flip-front p {
+    flex: 1 1 auto;
+    margin-bottom: 0;
+}
+
+.history-flip-front .history-flip-hint {
+    margin-top: auto;
+    margin-bottom: 0;
+    align-self: flex-end;
+}
+
+.history-flip-back {
+    display: flex;
+    flex-direction: column;
+}
+
+.history-flip-back p {
+    flex: 0 1 auto;
+    overflow: visible;
+    padding-right: 0;
+    overflow-wrap: anywhere;
+}
+
+.history-flip-back .history-flip-hint {
+    margin-top: 12px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
 .post-history-bg {
     position: relative;
-    background-image: url('Images/hero-bg2.png');
+    background-image: url('Images/hero-bg2.webp');
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -577,6 +624,7 @@ h2::after {
     width: min(94vw, 1360px);
     max-height: calc(100vh - 120px);
     margin: 0 auto;
+    transform: translateY(-22px);
     padding: 0 0 28px;
     border-radius: 24px;
     border: 1px solid rgba(212, 175, 55, 0.55);
@@ -907,6 +955,22 @@ h2::after {
 .product-card.active:hover {
     box-shadow: none;
 }
+.product-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.product-face-front {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-face-back {
+    display: none;
+}
+
 .product-card img {
     width: 100%;
     height: clamp(170px, 22vh, 280px);
@@ -936,7 +1000,7 @@ h2::after {
 
 .product-title {
     font-family: 'Playfair Display', serif;
-    font-size: clamp(16px, 1.7vw, 22px);
+    font-size: clamp(14px, 1.45vw, 19px);
     font-weight: 900;
     color: #FF8C42;
     margin-bottom: 10px;
@@ -947,6 +1011,10 @@ h2::after {
     padding: clamp(6px, 1vw, 8px) clamp(8px, 1.2vw, 12px);
     background: rgba(0, 0, 0, 0.25);
     letter-spacing: 0.03em;
+}
+
+.product-flip-hint {
+    display: none;
 }
 
 .product-price {
@@ -1248,6 +1316,7 @@ footer {
     .pricelist {
         width: calc(100% - 12px);
         margin: 0 auto;
+        transform: translateY(-16px);
         border-radius: 16px;
         max-height: calc(100vh - 102px);
         padding: 0 0 24px;
@@ -1306,7 +1375,7 @@ footer {
         padding: 0 12px 0 0;
     }
     .section-nav {
-        bottom: 14px;
+        bottom: 2px;
         padding: 8px 12px;
     }
     .section-nav.corner {
@@ -1366,8 +1435,12 @@ footer {
         border-radius: 12px;
     }
     .history-flip-card:hover {
-        transform: none;
-        filter: none;
+        transform: scale(1.01);
+        filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.24));
+    }
+    .history-flip-card:active {
+        transform: scale(0.99);
+        filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.18));
     }
     h2 {
         font-size: 26px;
@@ -1382,11 +1455,60 @@ footer {
     .product-card {
         width: min(100%, 280px);
         height: clamp(400px, 47vh, 500px);
+        perspective: 1200px;
+        transform-style: preserve-3d;
+        -webkit-transform-style: preserve-3d;
+        background: transparent;
+        border: none;
+        overflow: visible;
+    }
+    .product-card.active {
+        transform: translate(-50%, -50%);
+        transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
     .product-card.prev {
         visibility: hidden;
         opacity: 0;
         pointer-events: none;
+    }
+    .product-card-inner {
+        transform-style: preserve-3d;
+        -webkit-transform-style: preserve-3d;
+        transition: transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .product-card.is-flipped .product-card-inner {
+        transform: rotateY(180deg);
+    }
+    .product-face {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        border-radius: inherit;
+        overflow: hidden;
+        background: #1a1a1a;
+        border: 2px solid #D4AF37;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 2px 12px rgba(210, 105, 30, 0.2);
+    }
+    .product-face-front {
+        display: flex;
+        flex-direction: column;
+        transform: rotateY(0deg) translateZ(1px);
+    }
+    .product-face-back {
+        display: flex;
+        transform: rotateY(180deg) translateZ(1px);
+        padding: 14px;
+        align-items: stretch;
+    }
+    .product-back-content {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        gap: 10px;
     }
     .product-card img {
         height: clamp(140px, 17vh, 180px);
@@ -1395,11 +1517,32 @@ footer {
         padding: 14px 14px 120px;
     }
     .product-title {
-        font-size: 18px;
+        font-size: 16px;
         padding: 6px 10px;
     }
     .product-desc {
         font-size: 13px;
+    }
+    .product-face-front .product-desc {
+        display: none;
+    }
+    .product-desc-back {
+        display: block;
+        flex: 1;
+        min-height: 0;
+        padding-right: 4px;
+    }
+    .product-flip-hint {
+        display: block;
+        margin-top: 8px;
+        font-size: 11px;
+        line-height: 1.35;
+        text-align: center;
+        color: rgba(255, 216, 107, 0.82);
+    }
+    .product-flip-hint-back {
+        margin-top: auto;
+        padding-top: 6px;
     }
     .cart-controls {
         bottom: 14px;
@@ -1436,6 +1579,7 @@ footer {
     }
     .pricelist {
         width: calc(100% - 8px);
+        transform: translateY(-10px);
         border-radius: 12px;
         max-height: calc(100vh - 88px);
         padding: 0 0 18px;
@@ -1481,29 +1625,6 @@ footer {
     }
     .scroll-arrow:active {
         transform: scale(0.93);
-    }
-    /* Флип-карточка: простой показ/скрытие вместо 3D */
-    .history-flip-inner {
-        transform-style: flat;
-    }
-    .history-flip-card.flipped .history-flip-inner {
-        transform: none;
-    }
-    .history-flip-front,
-    .history-flip-back {
-        backface-visibility: visible;
-        -webkit-backface-visibility: visible;
-    }
-    .history-flip-back {
-        position: static;
-        transform: none;
-        display: none;
-    }
-    .history-flip-card.flipped .history-flip-front {
-        display: none;
-    }
-    .history-flip-card.flipped .history-flip-back {
-        display: block;
     }
 }
 /* Корзина */
@@ -1637,7 +1758,7 @@ body.modal-open {
 .section-nav {
     position: fixed;
     left: 50%;
-    bottom: 18px;
+    bottom: 3px;
     transform: translateX(-50%);
     display: flex;
     flex-direction: row;
@@ -1650,10 +1771,16 @@ body.modal-open {
     box-shadow: 0 0 0 1px rgba(20, 20, 20, 0.38), 0 0 14px rgba(0, 0, 0, 0.24);
     backdrop-filter: blur(8px);
     z-index: 200;
+    opacity: 1;
     transition:
         transform 0.25s ease,
+        opacity 0.28s ease,
         box-shadow 0.32s ease,
         border-color 0.32s ease;
+}
+
+.section-nav.is-idle {
+    opacity: 0.38;
 }
 
 .section-nav-btn {
