@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
     <title>Азбука копчения – искусство копчения мяса</title>
 
     <!-- Preconnect для внешних ресурсов -->
@@ -34,6 +36,15 @@
         <a href="#" class="cart-icon" id="cart-icon">Корзина<span class="cart-count" id="cart-count">0</span></a>
     </nav>
 </header>
+
+<div class="tg-safari-banner" id="tg-safari-banner" hidden>
+    <div class="tg-safari-banner__text">В Telegram сайт может открываться с ограничениями. Для нормальной работы откройте страницу во внешнем браузере Safari.</div>
+    <div class="tg-safari-banner__actions">
+        <button class="tg-safari-banner__btn" id="tg-open-safari" type="button">Открыть в Safari</button>
+        <button class="tg-safari-banner__btn tg-safari-banner__btn--ghost" id="tg-copy-link" type="button">Копировать ссылку</button>
+        <button class="tg-safari-banner__close" id="tg-close-safari" type="button" aria-label="Закрыть">×</button>
+    </div>
+</div>
 
 <div id="cart-modal" class="modal">
     <div class="modal-content">
