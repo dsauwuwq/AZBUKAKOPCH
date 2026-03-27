@@ -10,6 +10,82 @@ const cartModal = document.getElementById('cart-modal');
 const modalCartContainer = document.getElementById('modal-cart-container');
 const closeModalBtn = document.querySelector('.close-modal');
 const modalCheckoutBtn = document.getElementById('modal-checkout-btn');
+const tgSafariBanner = document.getElementById('tg-safari-banner');
+const tgOpenSafariBtn = document.getElementById('tg-open-safari');
+const tgCopyLinkBtn = document.getElementById('tg-copy-link');
+const tgCloseSafariBtn = document.getElementById('tg-close-safari');
+
+function isTelegramIosWebView() {
+    const ua = navigator.userAgent || '';
+    const isIos = /iPhone|iPad|iPod/i.test(ua);
+    const isTelegram = /Telegram/i.test(ua);
+    return isIos && isTelegram;
+}
+
+async function copyCurrentUrl() {
+    try {
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(window.location.href);
+            return true;
+        }
+    } catch (_) {
+        // noop
+    }
+
+    const input = document.createElement('input');
+    input.value = window.location.href;
+    document.body.appendChild(input);
+    input.select();
+    input.setSelectionRange(0, input.value.length);
+    const ok = document.execCommand('copy');
+    input.remove();
+    return ok;
+}
+
+function attemptOpenExternalBrowser() {
+    const url = window.location.href;
+    try {
+        if (window.Telegram?.WebApp?.openLink) {
+            window.Telegram.WebApp.openLink(url);
+            return;
+        }
+    } catch (_) {
+        // noop
+    }
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+}
+
+function setupTelegramSafariBanner() {
+    if (!tgSafariBanner || !isTelegramIosWebView()) return;
+    if (window.sessionStorage.getItem('tgSafariBannerDismissed') === '1') return;
+
+    tgSafariBanner.hidden = false;
+    tgSafariBanner.classList.add('show');
+
+    tgOpenSafariBtn?.addEventListener('click', () => {
+        attemptOpenExternalBrowser();
+    });
+
+    tgCopyLinkBtn?.addEventListener('click', async () => {
+        const copied = await copyCurrentUrl();
+        tgCopyLinkBtn.textContent = copied ? 'Ссылка скопирована' : 'Не удалось скопировать';
+    });
+
+    tgCloseSafariBtn?.addEventListener('click', () => {
+        tgSafariBanner.classList.remove('show');
+        tgSafariBanner.hidden = true;
+        window.sessionStorage.setItem('tgSafariBannerDismissed', '1');
+    });
+}
+
+setupTelegramSafariBanner();
 
 // Функция обновления счётчика на иконке
 function updateCartCounter() {
@@ -675,6 +751,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.addEventListener('resize', () => {
             updateCarousel('right', false);
+        });
+
+        window.addEventListener('navigateToSection', (event) => {
+            if (event.detail === 2) {
+                updateCarousel('right', false);
+            }
         });
 
         productsContainer.addEventListener('productsRendered', (event) => {
