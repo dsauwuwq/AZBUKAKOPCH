@@ -113,6 +113,14 @@ cartModal.addEventListener('click', (e) => {
     if (e.target === cartModal) closeCartModal();
 });
 
+// Логотип — переход на главный раздел
+const logoHome = document.getElementById('logo-home');
+if (logoHome) {
+    logoHome.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('navigateToSection', { detail: 0 }));
+    });
+}
+
 // Кнопка "Оформить заказ" в модалке прокручивает к форме
 modalCheckoutBtn.addEventListener('click', () => {
     closeCartModal();
@@ -165,7 +173,7 @@ function renderProducts(products) {
             <div class="product-card" data-id="${id}" data-price="${priceValue}">
                 <div class="product-card-inner">
                     <div class="product-face product-face-front">
-                        <img src="${img}" alt="${name}" onerror="this.src='images/placeholder.jpg'">
+                        <div class="product-img-wrap"><img src="${img}" alt="${name}" onerror="this.src='images/placeholder.jpg'"></div>
                         <div class="product-info">
                             <div class="product-title">${name}</div>
                             <div class="product-desc">${desc}</div>
@@ -375,30 +383,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const flipBack = flipCard.querySelector('.history-flip-back');
         let isFlipAnimating = false;
 
-        const syncHistoryFlipHeight = () => {
+        const getHistoryFlipHeight = (showBack) => {
+            if (!flipFront || !flipBack) return 0;
+            return showBack ? flipBack.scrollHeight : flipFront.scrollHeight;
+        };
+
+        const syncHistoryFlipHeight = (showBack = flipCard.classList.contains('flipped')) => {
             if (!flipInner || !flipFront || !flipBack) return;
 
-            const previousCardHeight = flipCard.style.height;
-            const previousInnerHeight = flipInner.style.height;
+            const targetHeight = getHistoryFlipHeight(showBack);
 
-            flipCard.style.height = '';
-            flipInner.style.height = '';
-
-            const frontHeight = flipFront.scrollHeight;
-            const backHeight = flipBack.scrollHeight;
-            const maxHeight = Math.max(frontHeight, backHeight);
-
-            if (maxHeight > 0) {
-                flipCard.style.height = `${maxHeight}px`;
-                flipInner.style.height = `${maxHeight}px`;
-            } else {
-                flipCard.style.height = previousCardHeight;
-                flipInner.style.height = previousInnerHeight;
+            if (targetHeight > 0) {
+                flipCard.style.height = `${targetHeight}px`;
+                flipInner.style.height = `${targetHeight}px`;
             }
         };
 
         const animateHistoryFlip = (showBack) => {
             if (!flipInner) return;
+
+            const currentHeight = getHistoryFlipHeight(!showBack);
+            const targetHeight = getHistoryFlipHeight(showBack);
+
+            if (currentHeight > 0) {
+                flipCard.style.height = `${currentHeight}px`;
+                flipInner.style.height = `${currentHeight}px`;
+                flipCard.getBoundingClientRect();
+                flipInner.getBoundingClientRect();
+            }
+
+            if (targetHeight > 0) {
+                window.requestAnimationFrame(() => {
+                    flipCard.style.height = `${targetHeight}px`;
+                    flipInner.style.height = `${targetHeight}px`;
+                });
+            }
 
             const fromTransform = showBack
                 ? 'translateZ(0) rotateY(0deg)'
@@ -423,6 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 animation.onfinish = () => {
                     flipCard.classList.toggle('flipped', showBack);
                     flipInner.style.transform = toTransform;
+                    syncHistoryFlipHeight(showBack);
                     isFlipAnimating = false;
                 };
 
@@ -435,6 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             flipCard.classList.toggle('flipped', showBack);
             flipInner.style.transform = toTransform;
+            syncHistoryFlipHeight(showBack);
             window.setTimeout(() => {
                 isFlipAnimating = false;
             }, 700);
@@ -464,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetSelector = link.getAttribute('href');
             if (!targetSelector || targetSelector === '#') return;
             event.preventDefault();
-            const idxMap = { '#history': 1, '#pricelist': 2, '#order': 3 };
+            const idxMap = { '#hero': 0, '#history': 1, '#pricelist': 2, '#order': 3 };
             const idx = idxMap[targetSelector];
             if (idx !== undefined) scrollToSection(idx);
         });
@@ -679,7 +700,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navDown = document.getElementById('section-nav-down');
 
     const getSections = () => sectionIds
-        .map(id => document.querySelector(id === 'hero' ? '.hero' : `#${id}`))
+        .map(id => document.querySelector(`#${id}`))
         .filter(Boolean);
 
     const getCurrentSectionIndex = () => _fpIndex;
@@ -782,18 +803,40 @@ document.addEventListener('DOMContentLoaded', () => {
         return shiftedRects.some((rect) => rectsOverlap(centeredNavRect, rect));
     };
 
+    const shouldNavBeHiddenOnDesktop = () => {
+        const sections = getSections();
+        return sections.some((_, idx) => shouldNavUseCornerForIndex(idx));
+    };
+
     const syncNavPosition = (targetIdx = getCurrentSectionIndex()) => {
         const nav = document.getElementById('section-nav');
         if (!nav) return;
         if (window.innerWidth <= 768) {
+            nav.classList.remove('corner', 'is-bottom');
+            nav.style.top = '';
+            return;
+        }
+        if (shouldNavBeHiddenOnDesktop()) {
+            nav.classList.add('is-bottom');
             nav.classList.remove('corner');
             nav.style.top = '';
             return;
         }
+        nav.classList.remove('is-bottom');
         const useCorner = shouldNavUseCornerForIndex(targetIdx);
         const navRect = getNavTargetRect(nav, useCorner);
         nav.classList.toggle('corner', useCorner);
         nav.style.top = `${Math.max(0, navRect.top)}px`;
+    };
+
+    const syncSectionAnimationState = (activeIdx = getCurrentSectionIndex()) => {
+        const sections = getSections();
+        sections.forEach((section, index) => {
+            section.classList.remove('is-before', 'is-active', 'is-after');
+            if (index < activeIdx) section.classList.add('is-before');
+            else if (index > activeIdx) section.classList.add('is-after');
+            else section.classList.add('is-active');
+        });
     };
 
     const scrollToSection = (idx) => {
@@ -801,10 +844,53 @@ document.addEventListener('DOMContentLoaded', () => {
         if (idx < 0 || idx >= sections.length) return;
         bumpNavActivity();
         syncNavPosition(idx);
+        syncSectionHints(idx);
+        syncSectionAnimationState(idx);
         const fpRunner = document.getElementById('fullpage-runner');
         if (fpRunner) fpRunner.style.transform = `translateY(calc(-${idx} * 100vh))`;
         _fpIndex = idx;
+        window.__particleTargetScrollY = idx * window.innerHeight;
+        window.__particleTargetSectionIdx = idx;
         updateNavButtons();
+    };
+
+    const sectionNames = ['Главная', 'О копчении', 'Виды копчений', 'Оформить заказ'];
+    const hintTop = document.getElementById('section-hint-top');
+    const hintBottom = document.getElementById('section-hint-bottom');
+
+    const syncSectionHints = (idx = getCurrentSectionIndex()) => {
+        if (!hintTop || !hintBottom) return;
+        const sections = getSections();
+        const isDesktop = window.innerWidth > 768;
+
+        if (!isDesktop) {
+            hintTop.hidden = true;
+            hintBottom.hidden = true;
+            return;
+        }
+
+        if (idx > 0) {
+            hintTop.textContent = '↑ ' + (sectionNames[idx - 1] || '');
+            hintTop.hidden = false;
+            hintTop.onclick = () => scrollToSection(idx - 1);
+        } else {
+            hintTop.hidden = true;
+        }
+
+        if (idx < sections.length - 1) {
+            hintBottom.textContent = (sectionNames[idx + 1] || '') + ' ↓';
+            hintBottom.hidden = false;
+            hintBottom.onclick = () => scrollToSection(idx + 1);
+        } else {
+            hintBottom.hidden = true;
+        }
+    };
+
+    const origScrollToSection = scrollToSection;
+    // Патчим scrollToSection чтобы обновлять hints
+    const _scrollToSectionWithHints = (idx) => {
+        origScrollToSection(idx);
+        syncSectionHints(idx);
     };
 
     if (dotsContainer) {
@@ -816,9 +902,11 @@ document.addEventListener('DOMContentLoaded', () => {
             navDown.addEventListener('click', () => scrollToSection(getCurrentSectionIndex() + 1));
         }
         window.addEventListener('navigateToSection', (e) => scrollToSection(e.detail));
-        window.addEventListener('resize', syncNavPosition);
+        window.addEventListener('resize', () => { syncNavPosition(); syncSectionHints(); });
         updateNavButtons();
+        syncSectionAnimationState();
         syncNavPosition();
+        syncSectionHints();
     }
 
     if (sectionNav) {
