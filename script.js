@@ -456,11 +456,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Переворот карточки "О копчении"
+    let resyncHistoryFlipHeight = null;
     const flipCard = document.getElementById('history-flip-card');
     if (flipCard) {
         const flipInner = flipCard.querySelector('.history-flip-inner');
         const flipFront = flipCard.querySelector('.history-flip-front');
         const flipBack = flipCard.querySelector('.history-flip-back');
+        const historyVideo = document.querySelector('.history-video');
         let isFlipAnimating = false;
 
         const getHistoryFlipHeight = (showBack) => {
@@ -471,8 +473,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const syncHistoryFlipHeight = (showBack = flipCard.classList.contains('flipped')) => {
             if (!flipInner || !flipFront || !flipBack) return;
 
-            const targetHeight = getHistoryFlipHeight(showBack);
+            if (!showBack) {
+                // Лицевая сторона — не ставим явную высоту, CSS align-self: center центрирует
+                flipCard.style.height = '';
+                flipInner.style.height = '';
+                return;
+            }
 
+            // Обратная сторона — нужна явная высота (back face position:absolute)
+            const targetHeight = getHistoryFlipHeight(showBack);
             if (targetHeight > 0) {
                 flipCard.style.height = `${targetHeight}px`;
                 flipInner.style.height = `${targetHeight}px`;
@@ -546,6 +555,13 @@ document.addEventListener('DOMContentLoaded', () => {
             window.requestAnimationFrame(syncHistoryFlipHeight);
         };
 
+        const scheduleHistoryFlipSyncDeep = () => {
+            scheduleHistoryFlipSync();
+            window.requestAnimationFrame(() => {
+                window.requestAnimationFrame(syncHistoryFlipHeight);
+            });
+        };
+
         flipCard.addEventListener('click', () => {
             if (isFlipAnimating) return;
             isFlipAnimating = true;
@@ -554,7 +570,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         window.addEventListener('resize', scheduleHistoryFlipSync);
-        scheduleHistoryFlipSync();
+        window.addEventListener('load', scheduleHistoryFlipSyncDeep);
+
+        if (document.fonts?.ready) {
+            document.fonts.ready.then(scheduleHistoryFlipSyncDeep).catch(() => {});
+        }
+
+        if (historyVideo) {
+            ['loadedmetadata', 'loadeddata', 'canplay', 'playing'].forEach((eventName) => {
+                historyVideo.addEventListener(eventName, scheduleHistoryFlipSyncDeep, { passive: true });
+            });
+        }
+
+        if (typeof ResizeObserver === 'function') {
+            const historyFlipObserver = new ResizeObserver(() => {
+                scheduleHistoryFlipSyncDeep();
+            });
+
+            if (flipFront) historyFlipObserver.observe(flipFront);
+            if (flipBack) historyFlipObserver.observe(flipBack);
+            if (historyVideo) historyFlipObserver.observe(historyVideo);
+        }
+
+        resyncHistoryFlipHeight = scheduleHistoryFlipSyncDeep;
+        scheduleHistoryFlipSyncDeep();
     }
 
     // Плавная прокрутка к секциям по клику в меню с учетом высоты шапки
@@ -923,6 +962,10 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (index > activeIdx) section.classList.add('is-after');
             else section.classList.add('is-active');
         });
+        // Пересчитать высоту карточки когда секция «О копчении» становится активной
+        if (activeIdx === 1 && resyncHistoryFlipHeight) {
+            resyncHistoryFlipHeight();
+        }
     };
 
     const scrollToSection = (idx) => {
