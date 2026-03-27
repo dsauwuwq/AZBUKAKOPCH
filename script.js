@@ -63,7 +63,11 @@ function attemptOpenExternalBrowser() {
 }
 
 function setupTelegramSafariBanner() {
-    if (!tgSafariBanner || !isTelegramIosWebView()) return;
+    if (!isTelegramIosWebView()) return;
+
+    document.body.classList.add('ios-telegram-webview');
+
+    if (!tgSafariBanner) return;
     if (window.sessionStorage.getItem('tgSafariBannerDismissed') === '1') return;
 
     tgSafariBanner.hidden = false;
