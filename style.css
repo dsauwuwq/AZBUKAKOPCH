@@ -2654,6 +2654,50 @@ body.modal-open {
 
 @media (max-width: 480px) {
     @supports (-webkit-touch-callout: none) {
+        .products.compact-mode .product-card,
+        .products.compact-mode .product-card-inner,
+        .products.compact-mode .product-face {
+            transform-style: flat !important;
+            -webkit-transform-style: flat !important;
+            backface-visibility: visible !important;
+            -webkit-backface-visibility: visible !important;
+        }
+
+        .products.compact-mode .product-card.is-flipped .product-card-inner {
+            transform: none !important;
+        }
+
+        .products.compact-mode .product-card .product-face {
+            transition: opacity 0.28s ease, visibility 0.28s ease;
+        }
+
+        .products.compact-mode .product-card .product-face-front {
+            opacity: 1;
+            visibility: visible;
+            transform: none !important;
+            pointer-events: auto;
+        }
+
+        .products.compact-mode .product-card .product-face-back {
+            display: flex;
+            opacity: 0;
+            visibility: hidden;
+            transform: none !important;
+            pointer-events: none;
+        }
+
+        .products.compact-mode .product-card.is-flipped .product-face-front {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .products.compact-mode .product-card.is-flipped .product-face-back {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
         #pricelist .pricelist {
             transition: opacity 0.92s ease !important;
         }
@@ -2682,6 +2726,19 @@ body.modal-open {
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
+        }
+
+        body.ios-telegram-webview .pricelist {
+            max-height: calc(100vh - 118px);
+            transform: translateY(-28px) !important;
+        }
+
+        body.ios-telegram-webview .products {
+            height: clamp(400px, 44vh, 480px);
+        }
+
+        body.ios-telegram-webview .products-dots {
+            margin-top: 8px;
         }
     }
 }
