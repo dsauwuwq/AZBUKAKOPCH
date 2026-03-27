@@ -1746,7 +1746,10 @@ footer {
     .products {
         width: min(100%, 320px);
         height: clamp(430px, 50vh, 520px);
-        overflow: visible;
+        overflow: hidden;
+        isolation: isolate;
+        -webkit-mask-image: -webkit-radial-gradient(white, black);
+        mask-image: radial-gradient(white, black);
     }
     .product-card {
         width: min(100%, 280px);
@@ -1756,9 +1759,11 @@ footer {
         -webkit-transform-style: preserve-3d;
         background: transparent;
         border: none;
-        overflow: visible;
+        overflow: hidden;
         border-radius: 30px;
         box-shadow: none;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
     }
     .product-card.active {
         transform: translate(-50%, -50%);
@@ -1772,6 +1777,11 @@ footer {
     .products.compact-mode .product-card.compact-exiting {
         pointer-events: none;
     }
+    .products.compact-mode .product-card:not(.active):not(.compact-exiting) {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
     .product-card-inner {
         position: relative;
         width: 100%;
@@ -1780,7 +1790,9 @@ footer {
         -webkit-transform-style: preserve-3d;
         transition: transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
         border-radius: inherit;
-        overflow: visible;
+        overflow: hidden;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
     }
     .product-card.is-flipped .product-card-inner {
         transform: rotateY(180deg);
@@ -1868,6 +1880,7 @@ footer {
     .products-wrapper {
         gap: 8px;
         align-items: center;
+        overflow: hidden;
     }
     .products-dots {
         gap: 7px;
@@ -1903,7 +1916,7 @@ footer {
     }
     .pricelist {
         width: calc(100% - 8px);
-        transform: translateY(-10px);
+        transform: translateY(-18px);
         border-radius: 12px;
         max-height: calc(100vh - 88px);
         padding: 0 0 18px;
