@@ -4,14 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Азбука копчения – искусство копчения мяса</title>
+
+    <!-- Preconnect для внешних ресурсов -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Preload критичных ресурсов -->
+    <link rel="preload" href="Images/your-logo.svg" as="image" type="image/svg+xml">
+    <link rel="preload" href="Images/hero-bg.webp" as="image" type="image/webp">
+    <link rel="preload" href="Images/hero-bg2.webp" as="image" type="image/webp">
+
+    <!-- Шрифты — не блокируют рендер -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@1,400;1,600&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@1,400;1,600&display=swap"></noscript>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <canvas id="particles-canvas"></canvas>
     <div class="parallax-bg" id="parallax-bg"></div>
     <header>
-    <div class="logo"><img src="Images/your-logo.svg" alt="Азбука копчения" class="logo-img"></div>
+    <div class="logo" id="logo-home"><img src="Images/your-logo.svg" alt="Азбука копчения" class="logo-img" fetchpriority="high"></div>
     <button class="nav-toggle" id="nav-toggle" type="button" aria-controls="site-nav" aria-expanded="false">Меню</button>
     <nav id="site-nav">
+        <a href="#hero">Главная</a>
         <a href="#history">История</a>
         <a href="#pricelist">Виды копчений</a>
         <a href="#order">Заказ</a>
@@ -31,7 +47,7 @@
 </div>
 
     <div id="fullpage-runner" class="fullpage-runner">
-    <section class="hero parallax">
+    <section id="hero" class="hero parallax">
         <div class="hero-content">
             <h1>Вкус, который забыть невозможно</h1>
             <p>Натуральный дым. Ручная работа. Честное мясо.</p>
@@ -39,18 +55,34 @@
     </section>
 
     <div class="post-history-bg" id="post-history-bg">
+    <video class="post-history-bg-video" id="post-history-bg-video" autoplay muted loop playsinline preload="auto">
+        <source src="Images/916.mp4" type="video/mp4">
+    </video>
     <section id="history" class="history">
+        <div class="history-deco history-deco-1"></div>
+        <div class="history-deco history-deco-2"></div>
+        <div class="history-deco history-deco-3"></div>
+        <div class="history-deco history-deco-4"></div>
         <div class="container">
             <h2>О копчении</h2>
-            <div class="history-flip-card" id="history-flip-card">
-                <div class="history-flip-inner">
-                    <div class="history-flip-front history-block">
-                        <p>Всё началось с разочарования в магазинном мясе: безвкусные грудинки с жидким дымом, пересол, химические добавки. Я бросил офис, продал машину и построил коптильни, где лично контролирую каждый этап — от выбора фермерского сырья до финальной минуты копчения. Никакого конвейера, только ручной контроль температуры, времени и сорта древесины (ольха, вишня, яблоня).</p>
-                        <span class="history-flip-hint">Нажмите, чтобы узнать больше →</span>
-                    </div>
-                    <div class="history-flip-back history-block">
-                        <p>Сегодня моя коптильня — это принципы, а не просто производство. Я не использую жидкий дым, ускорители и искусственные ингибиторы. Мясо коптится столько, сколько нужно натуральному продукту, а срок годности остаётся естественным — ровно настолько, насколько позволяет качество. Я лично знаю каждого фермера, у которого закупаю сырьё, и делаю продукт, который не стыдно положить на стол. Это вкус, который вы почти забыли: без компромиссов, без лишних ингредиентов, только честный дым и мясо с душой.</p>
-                        <span class="history-flip-hint">← Вернуться</span>
+            <div class="history-layout">
+                <div class="history-video-col">
+                    <video class="history-video" autoplay muted loop playsinline preload="none">
+                        <source src="Images/Steik.mp4?v=2" type="video/mp4">
+                    </video>
+                </div>
+                <div class="history-card-col">
+                    <div class="history-flip-card" id="history-flip-card">
+                        <div class="history-flip-inner">
+                            <div class="history-flip-front history-block">
+                                <p>Всё началось с разочарования в магазинном мясе: безвкусные грудинки с жидким дымом, пересол, химические добавки. Я бросил офис, продал машину и построил коптильни, где лично контролирую каждый этап — от выбора фермерского сырья до финальной минуты копчения. Никакого конвейера, только ручной контроль температуры, времени и сорта древесины (ольха, вишня, яблоня).</p>
+                                <span class="history-flip-hint">Нажмите, чтобы узнать больше →</span>
+                            </div>
+                            <div class="history-flip-back history-block">
+                                <p>Сегодня моя коптильня — это принципы, а не просто производство. Я не использую жидкий дым, ускорители и искусственные ингибиторы. Мясо коптится столько, сколько нужно натуральному продукту, а срок годности остаётся естественным — ровно настолько, насколько позволяет качество. Я лично знаю каждого фермера, у которого закупаю сырьё, и делаю продукт, который не стыдно положить на стол. Это вкус, который вы почти забыли: без компромиссов, без лишних ингредиентов, только честный дым и мясо с душой.</p>
+                                <span class="history-flip-hint">← Вернуться</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -74,6 +106,10 @@
     </div>
 
         <div id="order" class="order-page">
+            <div class="order-deco order-deco-1"></div>
+            <div class="order-deco order-deco-2"></div>
+            <div class="order-deco order-deco-3"></div>
+            <div class="order-deco order-deco-4"></div>
             <section class="order">
                 <div class="container">
                     <h2>Оформить заказ</h2>
@@ -95,41 +131,262 @@
     </div>
     </div><!-- /fullpage-runner -->
 
+    <button class="section-hint section-hint-top" id="section-hint-top" aria-label="Предыдущий раздел"></button>
+    <button class="section-hint section-hint-bottom" id="section-hint-bottom" aria-label="Следующий раздел"></button>
+
     <div class="section-nav" id="section-nav" aria-label="Навигация по разделам">
         <button class="section-nav-btn" id="section-nav-up" aria-label="Предыдущий раздел">&#8679;</button>
         <div class="section-nav-dots" id="section-nav-dots"></div>
         <button class="section-nav-btn" id="section-nav-down" aria-label="Следующий раздел">&#8681;</button>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
     <script>
         const parallaxBg = document.getElementById('parallax-bg');
         const historySection = document.getElementById('history');
-        let latestScrollY = window.scrollY;
-        let ticking = false;
+
+        function getRunnerScrollY() {
+            const runner = document.getElementById('fullpage-runner');
+            if (!runner) return window.scrollY;
+            const mat = new DOMMatrix(getComputedStyle(runner).transform);
+            return -mat.m42;
+        }
 
         function updateParallax() {
-            parallaxBg.style.transform = `translateY(${latestScrollY * -0.3}px)`;
+            const scrollY = getRunnerScrollY();
+            parallaxBg.style.transform = `translateY(${scrollY * -0.15}px)`;
 
             const historyBottom = historySection
                 ? historySection.offsetTop + historySection.offsetHeight
                 : 0;
             const secondBgStartOffset = 700;
-            const secondBgScroll = Math.max(0, latestScrollY - (historyBottom - secondBgStartOffset));
+            const secondBgScroll = Math.max(0, scrollY - (historyBottom - secondBgStartOffset));
             document.body.style.setProperty('--bg2-parallax', `${secondBgScroll * -0.1}px`);
 
-            ticking = false;
+            requestAnimationFrame(updateParallax);
         }
 
-        window.addEventListener('scroll', () => {
-            latestScrollY = window.scrollY;
-            if (!ticking) {
-                window.requestAnimationFrame(updateParallax);
-                ticking = true;
-            }
-        });
-
         updateParallax();
+    </script>
+
+    <script>
+    (function () {
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        const POOL_SIZE = 70;
+        const particles = [];
+
+        // Smooth world-scroll offset (mirrors section translateY)
+        let _scrollY    = 0;
+        // Smooth intensity (0.18 at hero → 0.6 at order)
+        let _intensity  = 0.18;
+        const INTENSITY_BY_SECTION = [0.18, 0.32, 0.46, 0.62];
+
+        // Content block rects for particle masking
+        let _maskRects = [];
+        let _maskCacheFrame = 59; // triggers refresh on first draw()
+
+        function rand(min, max) { return min + Math.random() * (max - min); }
+
+        function isInBlock(sx, sy) {
+            for (const r of _maskRects) {
+                if (sx >= r.left && sx <= r.right && sy >= r.top && sy <= r.bottom) return true;
+            }
+            return false;
+        }
+
+        // Biased random world Y — lower sections are more likely
+        // Math.pow(r, exp) with exp < 1 skews values toward 1.0 (bottom of world)
+        // exp=0.4 → strong bottom-bias, exp=1.0 → uniform, exp=2.0 → top-bias
+        function randWorldY() { return worldHeight() * Math.pow(Math.random(), 0.4); }
+
+        const TYPES = ['ember', 'ember', 'ember', 'spark', 'spark', 'ash', 'ash'];
+
+        // Total world height = number of sections × viewport height
+        const SECTION_COUNT = 4;
+        const worldHeight = () => SECTION_COUNT * window.innerHeight;
+
+        function createParticle(p, spawnWorldY) {
+            const type = TYPES[Math.floor(Math.random() * TYPES.length)];
+            p.type   = type;
+            p.x      = rand(0, canvas.width);
+            // If explicit world Y given use it, otherwise spawn at bottom of current viewport
+            p.y      = (spawnWorldY !== undefined)
+                         ? spawnWorldY
+                         : _scrollY + canvas.height + rand(0, 40);
+            // Avoid spawning inside content blocks — retry X up to 12 times
+            if (_maskRects.length) {
+                const sy = p.y - _scrollY;
+                for (let t = 0; t < 12 && isInBlock(p.x, sy); t++) {
+                    p.x = rand(0, canvas.width);
+                }
+            }
+            p.vx     = rand(-0.2, 0.2);
+            p.vy     = rand(-0.7, -0.25);
+            p.waver  = rand(0, Math.PI * 2);
+            p.waverSpeed = rand(0.008, 0.025);
+            p.waverAmp   = rand(0.2, 0.6);
+            p.life   = 0;
+            p.maxLife = rand(320, 700);
+
+            if (type === 'ember') {
+                p.size  = rand(3, 7);
+                const hue = rand(8, 42);
+                p.color = `hsl(${hue},100%,${rand(55, 70)}%)`;
+                p.glow  = `hsl(${hue},100%,78%)`;
+            } else if (type === 'spark') {
+                p.size  = rand(1.5, 3.5);
+                const hue = rand(35, 58);
+                p.color = `hsl(${hue},100%,82%)`;
+                p.glow  = `hsl(${hue},100%,95%)`;
+            } else {
+                p.size  = rand(2, 5);
+                p.color = `hsl(28,18%,${rand(75, 92)}%)`;
+                p.glow  = null;
+            }
+            p.blockScale = 1; // always reset so recycled particles don't carry stale fade state
+            p.fadeIn     = 0; // entrance fade — lerps 0→1 only while visible, resets on recycle
+            return p;
+        }
+
+        // Pre-scatter particles across the FULL world height of all sections
+        // so every section already has particles when the user arrives
+        for (let i = 0; i < POOL_SIZE; i++) {
+            const p = {};
+            // Random world Y anywhere across all sections
+            const worldY = randWorldY();
+            createParticle(p, worldY);
+            // Random life progress so they're mid-flight, not all brand-new
+            p.life = rand(0, p.maxLife * 0.8);
+            particles.push(p);
+        }
+
+        const fpRunner = document.getElementById('fullpage-runner');
+
+        function getRunnerScrollY() {
+            if (!fpRunner) return 0;
+            const mat = new DOMMatrix(getComputedStyle(fpRunner).transform);
+            return -mat.m42; // translateY in pixels (runner moves negative = page scrolled down)
+        }
+
+        function draw() {
+            // Read actual CSS translateY each frame — perfectly in sync with transition
+            _scrollY = getRunnerScrollY();
+
+            // Refresh content block rects for particle masking (every ~60 frames)
+            if (++_maskCacheFrame >= 60) {
+                _maskCacheFrame = 0;
+                _maskRects = Array.from(document.querySelectorAll(
+                    '.container, header, .hero-content'
+                )).map(el => el.getBoundingClientRect()).filter(r => r.width > 0);
+            }
+
+            // Lerp intensity based on current section depth
+            const sIdx = window.__particleTargetSectionIdx || 0;
+            const targetIntensity = INTENSITY_BY_SECTION[Math.min(sIdx, INTENSITY_BY_SECTION.length - 1)];
+            _intensity += (targetIntensity - _intensity) * 0.025;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Shift canvas context so world-space Y maps to screen
+            ctx.save();
+            ctx.translate(0, -_scrollY);
+
+            for (const p of particles) {
+                // Move every frame regardless of visibility
+                p.waver += p.waverSpeed;
+                p.x += p.vx + Math.sin(p.waver) * p.waverAmp;
+                p.y += p.vy;
+                p.x += 0.03;  // gentle rightward wind
+
+                // Screen-space Y for visibility test
+                const screenY = p.y - _scrollY;
+
+                // Off-screen: freeze aging, recycle only if drifted sideways
+                if (screenY < -20 || screenY > canvas.height + 20) {
+                    if (p.x < -50 || p.x > canvas.width + 50) {
+                        createParticle(p, randWorldY());
+                    }
+                    continue;
+                }
+
+                // On-screen: age the particle
+                p.life++;
+
+                const progress = p.life / p.maxLife;
+                let alpha;
+                if (progress < 0.08)       alpha = progress / 0.08;
+                else if (progress < 0.75)  alpha = 1;
+                else                       alpha = (1 - progress) / 0.25;
+                // Smooth entrance fade — lerp fadeIn 0→1 while visible, smoothstep eased
+                // fadeIn never resets on off-screen, only on recycle → no re-flash during transitions
+                p.fadeIn = Math.min(1, (p.fadeIn || 0) + 0.035);
+                const vt = p.fadeIn;
+                const entranceFade = vt * vt * (3 - 2 * vt);
+                alpha = Math.min(alpha, entranceFade);
+                // Fade out smoothly when particle enters a content block
+                let _inBlock = false;
+                for (const r of _maskRects) {
+                    if (p.x >= r.left && p.x <= r.right && screenY >= r.top && screenY <= r.bottom) {
+                        _inBlock = true; break;
+                    }
+                }
+                p.blockScale += ((_inBlock ? 0.0 : 1.0) - p.blockScale) * 0.12;
+                alpha *= _intensity * p.blockScale;
+
+                if (p.glow) {
+                    ctx.save();
+                    ctx.globalAlpha = alpha * 0.38;
+                    ctx.shadowColor = p.glow;
+                    ctx.shadowBlur  = p.size * 5 * _intensity;
+                    ctx.fillStyle   = p.glow;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * 1.4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle   = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                if (p.life >= p.maxLife || p.y < -20 || p.x < -50 || p.x > canvas.width + 50) {
+                    createParticle(p, randWorldY());
+                    p.life = 0; // always fade in from zero — no abrupt appearance
+                }
+            }
+
+            ctx.restore();
+            requestAnimationFrame(draw);
+        }
+
+        draw();
+    })();
+    </script>
+
+    <script>
+    (function () {
+        const vid = document.getElementById('post-history-bg-video');
+        if (!vid) return;
+        const onReady = () => vid.classList.add('ready');
+        if (vid.readyState >= 3) {
+            onReady();
+        } else {
+            vid.addEventListener('canplaythrough', onReady, { once: true });
+        }
+    })();
     </script>
 </body>
 </html>
