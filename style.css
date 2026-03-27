@@ -115,6 +115,70 @@ header > * {
     z-index: 1;
 }
 
+.tg-safari-banner {
+    position: fixed;
+    top: calc(clamp(64px, 7vw, 80px) + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(calc(100vw - 24px), 560px);
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(212, 175, 55, 0.55);
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.94);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(10px);
+    z-index: 260;
+}
+
+.tg-safari-banner.show {
+    display: flex;
+}
+
+.tg-safari-banner__text {
+    flex: 1;
+    color: #F3D38C;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.tg-safari-banner__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.tg-safari-banner__btn,
+.tg-safari-banner__close {
+    border: 1px solid rgba(212, 175, 55, 0.55);
+    background: rgba(210, 105, 30, 0.18);
+    color: #FFD86B;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.tg-safari-banner__btn {
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.tg-safari-banner__btn--ghost {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.tg-safari-banner__close {
+    width: 34px;
+    height: 34px;
+    font-size: 22px;
+    line-height: 1;
+}
+
 .logo {
     font-size: 28px;
     font-weight: bold;
@@ -1472,6 +1536,16 @@ footer {
 
 /* Адаптивность — планшеты */
 @media (max-width: 768px) {
+    .tg-safari-banner {
+        width: min(calc(100vw - 16px), 520px);
+        padding: 10px 12px;
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .tg-safari-banner__actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
     header {
         height: auto;
         padding: 0 16px 0 0;
@@ -1651,6 +1725,28 @@ footer {
 
 /* Адаптивность — телефоны */
 @media (max-width: 480px) {
+    .tg-safari-banner {
+        top: calc(clamp(50px, 13vw, 62px) + 10px);
+        width: calc(100vw - 14px);
+        gap: 10px;
+        padding: 10px;
+        border-radius: 12px;
+    }
+    .tg-safari-banner__text {
+        font-size: 12px;
+    }
+    .tg-safari-banner__actions {
+        justify-content: space-between;
+    }
+    .tg-safari-banner__btn {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 8px 9px;
+        font-size: 12px;
+    }
+    .tg-safari-banner__close {
+        flex: 0 0 34px;
+    }
     header {
         padding: 0 12px 0 0;
     }
@@ -2555,4 +2651,38 @@ body.modal-open {
     opacity: 1;
 }
 /* ====== конец вертикального выезда ====== */
+
+@media (max-width: 480px) {
+    @supports (-webkit-touch-callout: none) {
+        #pricelist .pricelist {
+            transition: opacity 0.92s ease !important;
+        }
+
+        #pricelist.is-before .pricelist,
+        #pricelist.is-after .pricelist,
+        #pricelist.is-active .pricelist {
+            transform: translateY(-24px) !important;
+        }
+
+        #pricelist.is-before .pricelist,
+        #pricelist.is-after .pricelist {
+            opacity: 0 !important;
+        }
+
+        #pricelist.is-active .pricelist {
+            opacity: 1 !important;
+        }
+
+        .products.compact-mode .product-card.compact-exiting,
+        .products.compact-mode .product-card.prev,
+        .products.compact-mode .product-card.prev.prev-1,
+        .products.compact-mode .product-card.prev.prev-2,
+        .products.compact-mode .product-card.prev.prev-1.exiting,
+        .products.compact-mode .product-card.prev.prev-2.exiting {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+    }
+}
 
